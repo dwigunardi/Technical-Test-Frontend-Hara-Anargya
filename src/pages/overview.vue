@@ -2,9 +2,11 @@
 import MainLayout from '../Layout/MainLayout.vue';
 import dataProvince from '../assets/js/province'
 import dataCity from '../assets/js/city'
-import { ref, computed } from 'vue';
+import { ref, computed, reactive, watch } from 'vue';
 
-
+const filtereData = reactive({
+    province: dataProvince,
+})
 function getCitiesByProvinceId(provinceId, citiesData) {
     const filteredCities = citiesData.filter(city => city.provinsi_id === provinceId);
     return filteredCities;
@@ -21,22 +23,44 @@ const currentPage = ref(1);
 const pageSize = ref(5);
 const totalProvinces = computed(() => dataProvince.length);
 
-const filteredProvinces = computed(() => {
+const filteredProvinces = () => {
     const searchTerm = searchQuery.value.toLowerCase();
-   if (searchTerm) {
-    return dataProvince.filter(
-        (province) =>
-            province.name.toLowerCase().includes(searchTerm) ||
-            province.wilayah_id.toString().includes(searchTerm)
-    );
-   }else {
-    return dataProvince
-   }
-});
+    if (searchTerm) {
+        return filtereData.province = dataProvince.filter(
+            (province) =>
+                province.name.toLowerCase().includes(searchTerm) ||
+                province.wilayah_id.toString().includes(searchTerm)
+        );
+    } else {
+        return filtereData.province = dataProvince
+    }
+}
+
 
 const start = computed(() => (currentPage.value - 1) * pageSize.value);
-
+const isDsc = ref(false);
+const isSortName = ref(false);
 const searchQuery = ref('');
+const handleDsc = () => {
+    isDsc.value = !isDsc.value;
+    filtereData.province.sort((a, b) => b.id - a.id);
+}
+const handleASC = () => {
+    isDsc.value = !isDsc.value;
+    filtereData.province.sort((a, b) => a.id - b.id);
+}
+const handleSortName = () => {
+    isSortName.value = !isSortName.value;
+    if (isSortName.value) {
+        filtereData.province.sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+        filtereData.province.sort((a, b) => b.name.localeCompare(a.name));
+    }
+}
+watch(searchQuery, () => {
+    currentPage.value = 1
+    filteredProvinces()
+})
 </script>
 
 <template>
@@ -50,14 +74,24 @@ const searchQuery = ref('');
                 <table class="w-full border border-gray-300">
                     <thead class="bg-gray-100">
                         <tr>
-                            <th class="px-4 py-2 text-left">ID</th>
-                            <th class="px-4 py-2 text-left">Name</th>
+                            <th v-if="!isDsc" class="flex justify-between px-4 py-2 text-left">
+                                ID<span class="cursor-pointer" @click="handleDsc">&#9660;</span>
+                            </th>
+                            <th v-else class="flex justify-between px-4 py-2 text-left">
+                                ID<span class="cursor-pointer" @click="handleASC">&#9650;</span>
+                            </th>
+                            <th v-if="!isSortName" class="px-4 py-2 text-left">Name <span
+                                    class="float-right ml-5 text-right cursor-pointer"
+                                    @click="handleSortName">&#9660;</span></th>
+                            <th v-else class="px-4 py-2 text-left">Name <span
+                                    class="float-right ml-5 text-right cursor-pointer"
+                                    @click="handleSortName">&#9650;</span></th>
                             <th class="px-4 py-2 text-left">Region ID</th>
                         </tr>
                     </thead>
 
                     <tbody>
-                        <tr v-for="province in filteredProvinces.slice(start, start + pageSize)" :key="province.id">
+                        <tr v-for="province in filtereData.province.slice(start, start + pageSize)" :key="province.id">
                             <td class="px-4 py-2">{{ province.id }}</td>
                             <td class="px-4 py-2">{{ province.name }}</td>
                             <td class="px-4 py-2">{{ province.wilayah_id }}</td>
@@ -75,15 +109,15 @@ const searchQuery = ref('');
                             class="px-2 py-1 mr-2 text-gray-700 bg-gray-200 rounded-md cursor-pointer hover:bg-gray-300">
                             Previous
                         </button>
-                        <span class="px-2 py-1 mr-2 text-gray-700" v-if="searchQuery.length > 1">{{ currentPage = 1  }}</span>
-                        <span class="px-2 py-1 mr-2 text-gray-700" v-else>{{ currentPage  }}</span>
+                        <span class="px-2 py-1 mr-2 text-gray-700" v-if="searchQuery.length > 1">{{ currentPage = 1
+                        }}</span>
+                        <span class="px-2 py-1 mr-2 text-gray-700" v-else>{{ currentPage }}</span>
                         <button :disabled="currentPage === Math.ceil(totalProvinces / pageSize)" @click="currentPage += 1"
                             class="px-2 py-1 text-gray-700 bg-gray-200 rounded-md cursor-pointer hover:bg-gray-300">
                             Next
                         </button>
                     </div>
                 </nav>
-            </div>
         </div>
-    </MainLayout>
-</template>
+    </div>
+</MainLayout></template>
