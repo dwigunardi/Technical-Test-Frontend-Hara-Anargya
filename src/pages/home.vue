@@ -166,22 +166,6 @@ const closeModal = () => {
                 </div>
             </div>
         </div>
-        <Modal :closeModal="closeModal" :dataModal="dataModal.users" :isModalVisible="isModalVisible" />
+        <Modal :closeModal="closeModal" :dataModal="dataModal.users" :isModalVisible="isModalVisible" :is-dashboard="true" />
     </MainLayout>
 </template>
-
-<style scoped>
-.read-the-docs {
-    color: #888;
-}
-
-.v-enter-active,
-.v-leave-active {
-    transition: opacity 0.7s ease;
-}
-
-.v-enter-from,
-.v-leave-to {
-    opacity: 0;
-}
-</style>
